@@ -2,13 +2,40 @@
 #############################FUNCTIONS###########################
 ##perform pathway enrichment analysis on user's gene list
 gene_path<-function(gene, db){
-    gostres<-gprofiler2::gost(gene, "hsapiens", sources=db, significant=FALSE)
-    res<-gostres$result
 
-    ##only keep pathway ids
-    res[,9]<-stringr::str_sub(res[, 9], 6)
-    res=res[,c(11,9)];names(res)=c("name","id")
-    return(res)
+  entrez_ids <- clusterProfiler::bitr(gene, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)$ENTREZID
+
+  if(db == "KEGG"){
+    res <- clusterProfiler::enrichKEGG(
+      gene         = entrez_ids,
+      organism     = 'hsa',     # Homo sapiens
+      pvalueCutoff = 1,         # correspond à significant = FALSE
+      qvalueCutoff = 1
+    )
+  }
+  else if(db == "REAC"){
+    res <- ReactomePA::enrichPathway(
+      gene         = entrez_ids,
+      organism     = "human",
+      pvalueCutoff = 1,  # pour récupérer toutes les voies
+      qvalueCutoff = 1,
+      readable     = TRUE # convertit les Entrez IDs en symboles
+    )
+  }
+  else if(db == "WP"){
+    res <- clusterProfiler::enrichWP(
+      gene         = entrez_ids,     # Symboles
+      organism     = "Homo sapiens",
+      pvalueCutoff = 1,
+      qvalueCutoff = 1
+    )
+  }
+  # Extraire id et description
+  df_res <- as.data.frame(res)[, c("ID","Description")]
+  colnames(df_res) <- c("id","name")
+  df_res_filter<- subset(df_res, !is.na(df_res$id))
+
+  return(df_res_filter)
 }
 
 ##perform pathway enrichment analysis on user's metabolites list
@@ -52,7 +79,7 @@ path_enrich<-function(source, metabo, genes){
                                             " - Homo sapiens (.)human(.)"))
         names(keggdb)<-nameskegg[!(nameskegg %in% "")]
 
-        resgene$id<-paste("hsa:", resgene$id, sep="")
+        resgene$id <- paste0("hsa:", sub("^hsa:?", "", resgene$id))
         resmeta[,2]=apply(resmeta, 1, function(x){
             id=keggdb[[x[1]]]
             if(!is.null(id)){id}
@@ -82,5 +109,8 @@ path_enrich<-function(source, metabo, genes){
         resmeta[,2]=unname(unlist(ids))
         resgene$id<-paste("WP", resgene$id, sep="")
     }
-    return(list(resmeta, resgene, genes, metabo, resmeta))
+    resgene_filter <- resgene[!is.na(resgene$id), ]
+    resmeta_filter <- resmeta[!is.na(resmeta$id), ]
+
+    return(list(resmeta_filter, resgene_filter, genes, metabo, resmeta_filter))
 }

@@ -419,11 +419,24 @@ sort_hiera<-function(pathways){
         else{list(NULL)}
     }, list(1))
     final_walks_r<-rm_vector(unname(unlist(final_walks_r)))
+    ####
+    if (length(final_walks_r) == 0){
+      final_walks_r<-character(0)
+    }
+    ####
     final_walks_r<-as.data.frame(sort(final_walks_r))
 
     names(final_walks_r)<-names(path_walks_w)<-names(path_walks_k)<-"walks"
     path_walks<-rbind(final_walks_r, path_walks_k,path_walks_w)
-    max<-max(stringr::str_count(path_walks[,1],">"))+1
+
+    ####
+    if (nrow(path_walks) == 0){
+      max = 1
+    }else{
+      max<-max(stringr::str_count(path_walks[,1],">"))+1
+    }
+    ####
+
     return(list(path_walks, max))
 }
 
@@ -606,8 +619,7 @@ final_tab<-function(build_hm, pathways, size, sorted_path, no_path,
 ##perform go term enrichment analysis
 enr_go<-function(genes){
     ##entrez genes ids for user's genes
-    genes_entrez<-gprofiler2::gconvert(genes, organism="hsapiens",
-                                        target='ENTREZGENE_ACC')$target
+    genes_entrez <- clusterProfiler::bitr(genes, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)$ENTREZID
     allResBP<-clusterProfiler::enrichGO(genes_entrez, keyType="ENTREZID",
                             'org.Hs.eg.db', ont="BP", pvalueCutoff=0.01)@result
     allResBP<-allResBP[c(seq_len(20)), ]
@@ -969,8 +981,18 @@ compl_data<-function(listparam){
     sorted_path<-filter_path(tagged,size)
     listpath<-sort_hiera(sorted_path)
     path_walks<-listpath[[1]]; max<-listpath[[2]]
-    path_walks<-tidyr::separate(path_walks, 1, as.character(c(seq_len(max))),
-                                sep=">", extra="drop", fill="right")
+    path_walks<-tidyr::separate(path_walks, 1, as.character(c(seq_len(max))),sep=">", extra="drop", fill="right")
+
+    if (nrow(path_walks) == 0) {
+      treeview<-NULL
+      listtab<-list(NULL, NULL, NULL, NULL)
+      return(list(NULL, meta_list, NULL, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL, NULL, NULL,
+                  gene_list, NULL, NULL, NULL,
+                  NULL, NULL, NULL, NULL,
+                  NULL, NULL))
+    }
+
     treeview<-tree_view(path_walks);names(treeview)<-c(seq_len(ncol(treeview)))
     listtab<-final_tab(treeview, pathways, size, sorted_path, no_path,
                         list_elem, tagged)
