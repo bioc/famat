@@ -189,20 +189,15 @@ interactions<-function(listk, listr, listw){
 
     list_elem<-c(meta_df$name, genes)
 
-    which(interac[, 1] %in% list_elem)
-    which(interac[, 3] %in% list_elem)
-
-    intera<-rm_df(rbind(interac[which(interac[, 1] %in% list_elem), ],interac[which(interac[, 3] %in% list_elem), ]))
-    central<-centrality_calc(intera, list_elem)
+    inter<-rm_df(rbind(interac[which(interac[, 1] %in% list_elem), ],interac[which(interac[, 3] %in% list_elem), ]))
+    central<-centrality_calc(inter, list_elem)
 
 
-    inte<-intera[intersect(which(intera[, 1] %in% list_elem),which(intera[, 3] %in% list_elem)), ]
-    int<-interactions_type(inte, meta_df$name, genes)
+    inter<-inter[intersect(which(inter[, 1] %in% list_elem),which(inter[, 3] %in% list_elem)), ]
+    inter<-interactions_type(inter, meta_df$name, genes)
 
-    list_filter<-filter_inter(int)
+    list_filter<-filter_inter(inter)
     tagged<-list_filter[[1]]; no_path<-list_filter[[2]]
-
-
 
     return(list(size, pathtot, tagged, keggchebiname, central, no_path, genes, meta_df$name))
 }

@@ -983,16 +983,6 @@ compl_data<-function(listparam){
     path_walks<-listpath[[1]]; max<-listpath[[2]]
     path_walks<-tidyr::separate(path_walks, 1, as.character(c(seq_len(max))),sep=">", extra="drop", fill="right")
 
-    if (nrow(path_walks) == 0) {
-      treeview<-NULL
-      listtab<-list(NULL, NULL, NULL, NULL)
-      return(list(NULL, meta_list, NULL, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL, NULL, NULL,
-                  gene_list, NULL, NULL, NULL,
-                  NULL, NULL, NULL, NULL,
-                  NULL, NULL))
-    }
-
     treeview<-tree_view(path_walks);names(treeview)<-c(seq_len(ncol(treeview)))
     listtab<-final_tab(treeview, pathways, size, sorted_path, no_path,
                         list_elem, tagged)
