@@ -99,6 +99,8 @@ centrality_calc<-function(interac, list_elem){
                 list(nrow(path_elem))
             }, list(1))
             list(pre_central)
+        }else {
+          list(NULL)
         }
     }, list(1))
     return(central)
@@ -124,7 +126,13 @@ filter_inter<-function(inter){
             paste(rm_vector(filtered_rows[, 4]), collapse=", "),
             paste(c(x[1], " / ", x[2]), collapse=""),filtered_rows[1, 6])
     })
+    ####
+    if (length(no_path)==0){
+      no_path <- character(6)
+    }
+    ####
     no_path=as.data.frame(t(no_path))
+
     names(no_path)=names(tagged)=c("from", "link", "to", "path", "tag", "type")
     no_path<-rm_df(no_path, c(seq_len(4)))
     return(list(tagged, no_path))
@@ -141,41 +149,55 @@ interactions<-function(listk, listr, listw){
     pathtotp<-pathtot[which(stringr::str_sub(pathtot$id, 1, 1)=="W"), ]
     pathtotk<-pathtot[which(stringr::str_sub(pathtot$id, 1, 1)=="h"), ]
     ##mappings for metabolites(chebi,kegg,name) and genes(gene symbol,name)
-    keggchebi<-KEGGREST::keggConv("chebi", "compound")
-    keggchebi<-rm_df(data.frame(chebi=keggchebi, kegg=sub('^cpd:?(.*)$','\\1',names(keggchebi)),
-                                keggcpd=names(keggchebi)),c(seq_len(3)))
+
+    ####Modif MC and CM 26/11/25 : change in KEGGrest keggConv doesn't support chebi anymore
+    ####keggchebi<-KEGGREST::keggConv("chebi", "compound")
+    ####keggchebi<-rm_df(data.frame(chebi=keggchebi, kegg=sub('^cpd:?(.*)$','\\1',names(keggchebi)),keggcpd=names(keggchebi)),c(seq_len(3)))
     #Modif MC 11/04/23 : change in KEGGrest chebiname, add cpd?
 
     #keggchebi<-rm_df(data.frame(kegg=names(keggchebi), chebi=keggchebi),
     #                c(seq_len(2)))
-    keggname<-KEGGREST::keggList("compound")
-    keggname<-data.frame(kegg=names(keggname), name=keggname)
-    name=apply(keggname,1,function(x){stringr::str_split(x[2], ";")[[1]][1]})
+    ####keggname<-KEGGREST::keggList("compound")
+    ####keggname<-data.frame(kegg=names(keggname), name=keggname)
+    ####name=apply(keggname,1,function(x){stringr::str_split(x[2], ";")[[1]][1]})
     #Modif MC 11/04/23 : Do we still need that?
-    keggname[,2]=unname(name)
-    keggchebiname<-merge(keggchebi, keggname, by="kegg")
-    keggchebiname$chebi<-stringr::str_to_upper(keggchebiname$chebi)
-    keggchebiname<-keggchebiname[which(!is.na(keggchebiname[,1])), ]
-    keggchebiname<-keggchebiname[which(!is.na(keggchebiname[,2])), ]
-    keggchebiname<-keggchebiname[which(!is.na(keggchebiname[,3])), ]
+    ####keggname[,2]=unname(name)
+    ####keggchebiname<-merge(keggchebi, keggname, by="kegg")
+    ####keggchebiname$chebi<-stringr::str_to_upper(keggchebiname$chebi)
+    ####keggchebiname<-keggchebiname[which(!is.na(keggchebiname[,1])), ]
+    ####keggchebiname<-keggchebiname[which(!is.na(keggchebiname[,2])), ]
+    ####keggchebiname<-keggchebiname[which(!is.na(keggchebiname[,3])), ]
     interac<-interac[which(interac[, 4] %in% pathtot[, 2]), ]
     ##Data informations
-    meta<-rm_vector(keggname[which(keggname$kegg %in% meta), 2])
+
+    ##keggname : keggname : kegg, name
+    ##          keggchebi : chebi, kegg
+    ##      keggchebiname : chebi, kegg, name
+
+    ####meta<-rm_vector(keggname[which(keggname$kegg %in% meta), 2])
     #Modic MC 11/04/23: change in keggname, no cpd: anymore
     #meta<-rm_vector(keggname[which(keggname$kegg
     #                                %in% paste("cpd:", meta, sep="")), 2])
-    size<-data_size(interac, meta, genes, keggchebiname,
-                    pathtotk, pathtotr, pathtotp)
-    list_elem<-c(meta, genes)
-    interac<-rm_df(rbind(interac[which(interac[, 1] %in% list_elem), ],
-                        interac[which(interac[, 3] %in% list_elem), ]))
-    central<-centrality_calc(interac, list_elem)
-    interac<-interac[intersect(which(interac[, 1] %in% list_elem),
-                                which(interac[, 3] %in% list_elem)), ]
-    interac<-interactions_type(interac, meta, genes)
-    list_filter<-filter_inter(interac)
+
+
+    meta_df = all_compounds_chebi[which(all_compounds_chebi$kegg_id %in% meta),]
+    meta_df = data.frame(kegg=meta_df$kegg_id,name=meta_df$kegg_name)
+
+    keggchebiname = data.frame(chebi = all_compounds_chebi$chebi_id, kegg = all_compounds_chebi$kegg_id, keggcpd = all_compounds_chebi$chebi_name, name = all_compounds_chebi$kegg_name)
+
+    size<-data_size(interac, meta_df$name, genes, keggchebiname, pathtotk, pathtotr, pathtotp)
+
+    list_elem<-c(meta_df$name, genes)
+
+    inter<-rm_df(rbind(interac[which(interac[, 1] %in% list_elem), ],interac[which(interac[, 3] %in% list_elem), ]))
+    central<-centrality_calc(inter, list_elem)
+
+
+    inter<-inter[intersect(which(inter[, 1] %in% list_elem),which(inter[, 3] %in% list_elem)), ]
+    inter<-interactions_type(inter, meta_df$name, genes)
+
+    list_filter<-filter_inter(inter)
     tagged<-list_filter[[1]]; no_path<-list_filter[[2]]
 
-    return(list(size, pathtot, tagged, keggchebiname, central,
-                                                no_path, genes, meta))
+    return(list(size, pathtot, tagged, keggchebiname, central, no_path, genes, meta_df$name))
 }

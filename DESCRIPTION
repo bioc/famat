@@ -1,6 +1,6 @@
 Package: famat
 Title: Functional analysis of metabolic and transcriptomic data
-Version: 1.21.0
+Version: 1.21.1
 Description:
     Famat is made to collect data about lists of genes and metabolites provided
     by user, and to visualize it through a Shiny app.
@@ -26,7 +26,7 @@ Authors@R:
 License: GPL-3           
 LazyData: false
 Depends: 
-    R (>= 4.0)
+    R (>= 4.3)
 Imports:
     KEGGREST,
     mgcv,
@@ -47,7 +47,9 @@ Imports:
     magrittr,
     DT,
     clusterProfiler,
-    org.Hs.eg.db
+    org.Hs.eg.db,
+	ReactomePA,
+	enrichplot
 VignetteBuilder: knitr    
 Suggests: 
     BiocStyle,
