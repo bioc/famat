@@ -140,6 +140,7 @@ filter_inter<-function(inter){
 
 ##Input : path_enrich results with KEGG, Reactome and Wikipathways.
 interactions<-function(listk, listr, listw){
+    all_compounds_chebi <- read.csv("data/all_compounds_chebi.csv")
     resmetak<-listk[[1]]; resgenek<-listk[[2]]; resmetar<-listr[[1]]
     resgener<-listr[[2]]; resmetaw<-listw[[1]]; resgenew<-listw[[2]]
     genes<-listk[[3]]; meta<-listk[[4]]
