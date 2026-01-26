@@ -79,7 +79,7 @@ is calculated.
 data(listk)
 data(listr)
 data(listw)
-
+data(all_compounds_chebi)
 interactions_result = interactions(listk, listr, listw)
 ```
 Results are then stored into a list. This list must be used in "compl_data"
@@ -154,6 +154,7 @@ be used one after another:
 ```{r famat, eval=FALSE}
 data(genes)
 data(meta)
+data(all_compounds_chebi)
 
 listk <- path_enrich("KEGG", meta, genes)
 listr <- path_enrich("REAC", meta, genes)
