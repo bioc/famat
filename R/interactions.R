@@ -140,7 +140,8 @@ filter_inter<-function(inter){
 
 ##Input : path_enrich results with KEGG, Reactome and Wikipathways.
 interactions<-function(listk, listr, listw){
-    all_compounds_chebi <- read.csv("data/all_compounds_chebi.csv")
+
+#    all_compounds_chebi <- read.csv("data/all_compounds_chebi.csv")
     resmetak<-listk[[1]]; resgenek<-listk[[2]]; resmetar<-listr[[1]]
     resgener<-listr[[2]]; resmetaw<-listw[[1]]; resgenew<-listw[[2]]
     genes<-listk[[3]]; meta<-listk[[4]]
@@ -180,7 +181,7 @@ interactions<-function(listk, listr, listw){
     #meta<-rm_vector(keggname[which(keggname$kegg
     #                                %in% paste("cpd:", meta, sep="")), 2])
 
-
+    data(all_compounds_chebi) #Modif chargement du RData
     meta_df = all_compounds_chebi[which(all_compounds_chebi$kegg_id %in% meta),]
     meta_df = data.frame(kegg=meta_df$kegg_id,name=meta_df$kegg_name)
 
